@@ -22,7 +22,10 @@ local function sha256(path)
 end
 
 function PLUGIN:BackendInstall(ctx)
-    local tool = registry.parse(ctx.tool)
+    local tool, channel = registry.parse(ctx.tool)
+    if channel and registry.channel(ctx.version) ~= channel then
+        error(ctx.tool .. " only installs " .. channel .. " versions, not " .. ctx.version)
+    end
     local entry
     for _, candidate in ipairs(registry.load(tool).versions) do
         if candidate.version == ctx.version then
@@ -41,7 +44,7 @@ function PLUGIN:BackendInstall(ctx)
     local archive = file.join_path(ctx.download_path, tool .. "-" .. ctx.version .. "-" .. platform .. ".tar.gz")
     http.download_file({ url = asset.url }, archive)
     local actual = sha256(archive)
-    if actual ~= asset.sha256 then
+    if actual ~= asset.sha256:lower() then
         error("checksum mismatch for " .. asset.url .. ": expected " .. asset.sha256 .. ", got " .. actual)
     end
     -- Archives hold one top-level directory with the executable and the runtime files it loads relative to itself.

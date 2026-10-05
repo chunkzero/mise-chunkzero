@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Installs chunk through the plugin from a local registry copy, then checks that a wrong checksum is rejected.
+# Installs chunk through the plugin from a local registry copy, then checks that other channels' versions and wrong checksums are rejected.
 set -euo pipefail
 root=$(cd "$(dirname "$0")/.." && pwd)
 work=$(mktemp -d)
@@ -20,6 +20,11 @@ TOML
 mise trust -q
 mise install
 mise exec -- chunk --version | grep -qx 'chunk 0.1.0-nightly.20261004.ge282f11816cd'
+if mise install chunkzero:chunk-beta@0.1.0-nightly.20261004.ge282f11816cd 2>"$work/error"; then
+  echo "installed a nightly as a beta" >&2
+  exit 1
+fi
+grep -q "only installs beta versions" "$work/error"
 
 sed -i 's/"sha256": "[0-9a-f]*"/"sha256": "'"$(printf '0%.0s' {1..64})"'"/' "$work/registry/tools/chunk.json"
 rm -rf "$MISE_DATA_DIR/installs" "$MISE_CACHE_DIR"
