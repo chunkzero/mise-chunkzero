@@ -12,7 +12,8 @@ local function sha256(path)
             .. ').Hash"')
     else
         local quoted = "'" .. path:gsub("'", "'\\''") .. "'"
-        output = cmd.exec((RUNTIME.osType == "darwin" and "shasum -a 256 " or "sha256sum ") .. quoted)
+        -- Hashing stdin keeps the output free of the filename, which sha256sum would escape.
+        output = cmd.exec((RUNTIME.osType == "darwin" and "shasum -a 256 < " or "sha256sum < ") .. quoted)
     end
     local digest = output:match("^%s*(%x+)")
     if not digest or #digest ~= 64 then
