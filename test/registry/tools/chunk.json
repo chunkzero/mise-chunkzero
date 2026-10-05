@@ -1,0 +1,16 @@
+{
+  "repository": "chunkzero/chunk",
+  "channels": { "nightly": "0.1.0-nightly.20261004.ge282f11816cd" },
+  "versions": [
+    {
+      "version": "0.1.0-nightly.20261004.ge282f11816cd",
+      "tag": "v0.1.0-nightly.20261004.ge282f11816cd",
+      "assets": {
+        "linux-x64": {
+          "url": "https://github.com/chunkzero/chunk/releases/download/v0.1.0-nightly.20261004.ge282f11816cd/chunk-0.1.0-nightly.20261004.ge282f11816cd-linux-x64.tar.gz",
+          "sha256": "e707dc45481899d3d49b759695c602e000a828089fea9430d23abf5225bdc96a"
+        }
+      }
+    }
+  ]
+}
