@@ -15,7 +15,7 @@ mkdir -p "$work/project" && cd "$work/project"
 mise plugins link chunkzero "$root"
 cat > mise.toml <<'TOML'
 [tools]
-"chunkzero:chunk" = { version = "latest", channel = "nightly", prerelease = true, minimum_release_age = "0s" }
+"chunkzero:chunk-nightly" = { version = "latest", prerelease = true }
 TOML
 mise trust -q
 mise install

@@ -9,15 +9,16 @@ runtime files bundled next to the executable.
 chunkzero = "https://github.com/chunkzero/mise-chunkzero"
 
 [tools]
-# Newest nightly, or newest alpha/beta/rc with channel = "beta".
-"chunkzero:chunk" = { version = "latest", channel = "nightly", prerelease = true, minimum_release_age = "0s" }
+# The newest nightly; `chunkzero:rpp-beta` follows the newest alpha, beta or rc instead.
+"chunkzero:chunk-nightly" = { version = "latest", prerelease = true }
 # An exact version from any channel.
 "chunkzero:rpp" = "0.1.0-nightly.20261004062300.ge282f11816cd"
 ```
 
-`channel` limits mise to that channel's releases, and `prerelease = true` lets `latest` select them. mise ignores
-releases younger than `minimum_release_age` (24 hours by default), so nightlies need it lowered. With `mise.lock`, the
-resolved version is pinned until `mise upgrade`.
+Each channel is its own tool, so its releases are cached and installed separately from the others. `prerelease = true`
+lets `latest` select nightly and beta versions. With `mise.lock`, the resolved version stays pinned; `mise upgrade`
+moves to the channel's newest release. The registry has no release dates, so mise's `minimum_release_age` doesn't apply
+to these tools.
 
 Stable releases don't need the plugin:
 

@@ -7,33 +7,38 @@ local registry = require("registry")
 local function sha256(path)
     local output
     if RUNTIME.osType == "windows" then
-        output = cmd.exec('powershell -NoProfile -Command "(Get-FileHash -Algorithm SHA256 -LiteralPath \'' .. path
-            .. '\').Hash"')
-    elseif RUNTIME.osType == "darwin" then
-        output = cmd.exec("shasum -a 256 '" .. path .. "'")
+        local quoted = "'" .. path:gsub("'", "''") .. "'"
+        output = cmd.exec('powershell -NoProfile -Command "(Get-FileHash -Algorithm SHA256 -LiteralPath ' .. quoted
+            .. ').Hash"')
     else
-        output = cmd.exec("sha256sum '" .. path .. "'")
+        local quoted = "'" .. path:gsub("'", "'\\''") .. "'"
+        output = cmd.exec((RUNTIME.osType == "darwin" and "shasum -a 256 " or "sha256sum ") .. quoted)
     end
-    return output:match("^%s*(%x+)"):lower()
+    local digest = output:match("^%s*(%x+)")
+    if not digest or #digest ~= 64 then
+        error("couldn't compute the sha256 of " .. path .. ": " .. output)
+    end
+    return digest:lower()
 end
 
 function PLUGIN:BackendInstall(ctx)
+    local tool = registry.parse(ctx.tool)
     local entry
-    for _, candidate in ipairs(registry.load(ctx.tool).versions) do
+    for _, candidate in ipairs(registry.load(tool).versions) do
         if candidate.version == ctx.version then
             entry = candidate
         end
     end
     if not entry then
-        error(ctx.tool .. " " .. ctx.version .. " isn't in the chunkzero registry")
+        error(tool .. " " .. ctx.version .. " isn't in the chunkzero registry")
     end
     local platform = registry.platform()
     local asset = entry.assets[platform]
-    if not asset then
-        error(ctx.tool .. " " .. ctx.version .. " has no " .. platform .. " build")
+    if not asset or not asset.sha256:match("^%x+$") or #asset.sha256 ~= 64 then
+        error(tool .. " " .. ctx.version .. " has no " .. platform .. " build")
     end
 
-    local archive = file.join_path(ctx.download_path, ctx.tool .. "-" .. ctx.version .. "-" .. platform .. ".tar.gz")
+    local archive = file.join_path(ctx.download_path, tool .. "-" .. ctx.version .. "-" .. platform .. ".tar.gz")
     http.download_file({ url = asset.url }, archive)
     local actual = sha256(archive)
     if actual ~= asset.sha256 then
