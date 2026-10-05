@@ -9,9 +9,8 @@ local function sha256(path)
     local options = { env = { CHUNKZERO_ARCHIVE = path } }
     local output
     if RUNTIME.osType == "windows" then
-        output = cmd.exec(
-            'powershell -NoProfile -Command "(Get-FileHash -Algorithm SHA256 -LiteralPath $env:CHUNKZERO_ARCHIVE).Hash"',
-            options)
+        -- `(Get-FileHash -Algorithm SHA256 -LiteralPath $env:CHUNKZERO_ARCHIVE).Hash`, encoded so the shell running the command can't expand it.
+        output = cmd.exec("powershell -NoProfile -EncodedCommand KABHAGUAdAAtAEYAaQBsAGUASABhAHMAaAAgAC0AQQBsAGcAbwByAGkAdABoAG0AIABTAEgAQQAyADUANgAgAC0ATABpAHQAZQByAGEAbABQAGEAdABoACAAJABlAG4AdgA6AEMASABVAE4ASwBaAEUAUgBPAF8AQQBSAEMASABJAFYARQApAC4ASABhAHMAaAA=", options)
     else
         local command = RUNTIME.osType == "darwin" and "shasum -a 256" or "sha256sum"
         output = cmd.exec(command .. ' < "$CHUNKZERO_ARCHIVE"', options)
