@@ -5,15 +5,16 @@ local http = require("http")
 local registry = require("registry")
 
 local function sha256(path)
+    -- The path goes through the environment, so neither cmd.exe nor sh can expand or split it.
+    local options = { env = { CHUNKZERO_ARCHIVE = path } }
     local output
     if RUNTIME.osType == "windows" then
-        local quoted = "'" .. path:gsub("'", "''") .. "'"
-        output = cmd.exec('powershell -NoProfile -Command "(Get-FileHash -Algorithm SHA256 -LiteralPath ' .. quoted
-            .. ').Hash"')
+        output = cmd.exec(
+            'powershell -NoProfile -Command "(Get-FileHash -Algorithm SHA256 -LiteralPath $env:CHUNKZERO_ARCHIVE).Hash"',
+            options)
     else
-        local quoted = "'" .. path:gsub("'", "'\\''") .. "'"
-        -- Hashing stdin keeps the output free of the filename, which sha256sum would escape.
-        output = cmd.exec((RUNTIME.osType == "darwin" and "shasum -a 256 < " or "sha256sum < ") .. quoted)
+        local command = RUNTIME.osType == "darwin" and "shasum -a 256" or "sha256sum"
+        output = cmd.exec(command .. ' < "$CHUNKZERO_ARCHIVE"', options)
     end
     local digest = output:match("^%s*(%x+)")
     if not digest or #digest ~= 64 then
